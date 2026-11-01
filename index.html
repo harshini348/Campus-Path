@@ -1,0 +1,254 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusPath - Smart Campus Navigation</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f7fb;color:#172b42}
+header{background:#173f70;color:white;padding:20px 6%;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.brand{font-size:23px;font-weight:bold}
+header small{font-size:12px}
+main{max-width:1100px;margin:auto;padding:30px 20px}
+.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:20px;align-items:center;margin-bottom:25px}
+h1{font-size:40px;margin:12px 0}
+.lead{line-height:1.7;color:#5b6d80}
+.hero-card{background:#dceaf7;border-radius:18px;padding:25px;color:#17304b}
+.hero-card strong{font-size:19px}
+.big{font-size:34px;font-weight:bold;margin-top:20px}
+.layout{display:grid;grid-template-columns:1fr 1.2fr;gap:20px}
+.panel{background:white;border:1px solid #dce5ee;border-radius:17px;padding:23px;box-shadow:0 5px 20px #17304b0c}
+h2{margin-top:0}
+.sub{color:#64788c;font-size:13px;line-height:1.5}
+label{display:block;font-weight:bold;font-size:14px;margin:16px 0 8px}
+select{width:100%;padding:13px;border:1px solid #cbd8e5;border-radius:10px;background:white;font-size:15px}
+button{border:0;border-radius:10px;padding:14px;font-weight:bold;cursor:pointer}
+.primary{width:100%;margin-top:20px;background:#173f70;color:white}
+.empty{min-height:250px;display:grid;place-items:center;text-align:center;color:#64788c}
+.empty-icon{font-size:45px}
+#result{display:none}
+.route-map{background:#f1f6fb;border-radius:12px;padding:15px;margin:15px 0}
+.route-track{display:flex;align-items:center;gap:8px;overflow-x:auto;padding:10px 0}
+.node{flex:0 0 105px;padding:14px 8px;background:white;border:1px solid #cbd8e5;border-radius:12px;text-align:center;font-size:12px;font-weight:bold}
+.node span{display:block;font-size:23px;margin-bottom:7px}
+.start{background:#173f70;color:white}
+.end{background:#dceaf7;color:#17304b}
+.arrow{color:#3976ad;font-size:22px}
+.summary{display:flex;gap:25px;background:#eaf2f9;padding:15px;border-radius:12px;margin:15px 0}
+.metric strong{display:block;font-size:22px}
+.metric small{color:#64788c}
+.steps{padding-left:20px}
+.steps li{padding:10px 4px;line-height:1.6;border-bottom:1px solid #e4ebf2}
+.locations{margin-top:25px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.location{background:white;border:1px solid #dce5ee;border-radius:12px;padding:14px 8px;text-align:center;font-size:12px;font-weight:bold}
+.location span{display:block;font-size:22px;margin-bottom:7px}
+.notice{font-size:11px;color:#64788c;line-height:1.5;margin-top:15px}
+footer{text-align:center;padding:25px;color:#64788c;font-size:12px}
+@media(max-width:700px){
+.hero,.layout{grid-template-columns:1fr}
+h1{font-size:33px}
+.grid{grid-template-columns:repeat(2,1fr)}
+header{align-items:flex-start;flex-direction:column}
+}
+</style>
+</head>
+<body>
+<header>
+<div class="brand">⌖ CampusPath</div>
+<small>SMART CAMPUS NAVIGATION SYSTEM</small>
+</header>
+<main>
+<section class="hero">
+<div>
+<p><b>FIND YOUR WAY AROUND CAMPUS</b></p>
+<h1>Every place.<br>One smart path.</h1>
+<p class="lead">Choose your starting point and destination. CampusPath helps you find a sample shortest route with simple step-by-step directions.</p>
+</div>
+<div class="hero-card">
+<strong>Navigation made simple</strong>
+<p>Explore campus locations and plan your next walk easily.</p>
+<div class="big">10 Locations</div>
+<small>Campus demo directory</small>
+</div>
+</section>
+
+<section class="layout">
+<div class="panel">
+<h2>Plan Your Route</h2>
+<p class="sub">Select your starting point and destination.</p>
+<label for="start">Starting Location</label>
+<select id="start"></select>
+<label for="end">Destination</label>
+<select id="end"></select>
+<button class="primary" id="find">Find Shortest Route →</button>
+<p class="notice">Demo distances are sample values. Actual campus paths and distances must be verified.</p>
+</div>
+
+<div class="panel">
+<h2>Your Directions</h2>
+<p class="sub">Your route details will appear here.</p>
+<div id="empty" class="empty">
+<div><div class="empty-icon">🧭</div><b>Your route starts here</b><p>Choose two locations and tap Find Shortest Route.</p></div>
+</div>
+<div id="result">
+<div class="route-map">
+<b>Visual Route</b>
+<div class="route-track" id="track"></div>
+</div>
+<div class="summary">
+<div class="metric"><strong id="distance">-</strong><small>Sample Distance</small></div>
+<div class="metric"><strong id="stops">-</strong><small>Route Stops</small></div>
+</div>
+<h3>Step-by-step Directions</h3>
+<ol class="steps" id="steps"></ol>
+</div>
+</div>
+</section>
+
+<section class="locations">
+<h2>Campus Locations</h2>
+<p class="sub">Explore the places included in this demo.</p>
+<div class="grid" id="grid"></div>
+</section>
+</main>
+<footer>CampusPath | Student Project Prototype</footer>
+
+<script>
+const places=["Main Gate","CSE Block","Library","Canteen","Admin Block","Principal Office","Office Room","Auditorium","Medical Block","Sports Ground"];
+const icons=["🚪","💻","📚","🍽️","🏢","🧑‍💼","📋","🎤","➕","🏟️"];
+
+const edges=[
+[0,1,120],[1,2,180],[0,3,90],[3,4,60],
+[4,5,20],[4,6,25],[0,7,450],[0,8,300],[8,9,120]
+];
+
+const directions={
+"0-1":"Enter through the Main Gate, walk straight to the entrance steps, go up to the third floor and turn right towards the CSE Block.",
+"1-2":"From the CSE Block, go down the stairs to the first floor, turn left and continue straight to the Library.",
+"0-3":"Enter through the Main Gate, turn left immediately and follow the path straight. Turn right to reach the Canteen.",
+"3-4":"From the Canteen, follow the connecting path towards the Admin Block.",
+"4-5":"The Principal Office is beside the Admin Block area.",
+"4-6":"The Office Room is beside the Admin Block area.",
+"0-7":"From the Main Gate, exit the gate, walk straight, turn left, continue straight, turn right and proceed to the Auditorium.",
+"0-8":"Exit the Main Gate, walk straight and turn left. Continue along the road towards the Medical Block.",
+"8-9":"Near the Medical Block, take the connecting path to reach the Sports Ground."
+};
+
+const start=document.getElementById("start");
+const end=document.getElementById("end");
+
+places.forEach((p,i)=>{
+start.add(new Option((i+1)+". "+p,i));
+end.add(new Option((i+1)+". "+p,i));
+});
+
+start.value="0";
+end.value="1";
+
+document.getElementById("grid").innerHTML=places.map((p,i)=>
+`<div class="location"><span>${icons[i]}</span>${p}</div>`
+).join("");
+
+function shortestPath(source,target){
+const n=places.length;
+const dist=Array(n).fill(Infinity);
+const prev=Array(n).fill(-1);
+const used=Array(n).fill(false);
+const graph=Array.from({length:n},()=>[]);
+
+edges.forEach(([a,b,w])=>{
+graph[a].push([b,w]);
+graph[b].push([a,w]);
+});
+
+dist[source]=0;
+
+for(let k=0;k<n;k++){
+let u=-1;
+for(let i=0;i<n;i++){
+if(!used[i]&&(u===-1||dist[i]<dist[u]))u=i;
+}
+if(u===-1||dist[u]===Infinity)break;
+used[u]=true;
+
+for(const [v,w] of graph[u]){
+if(dist[u]+w<dist[v]){
+dist[v]=dist[u]+w;
+prev[v]=u;
+}
+}
+}
+
+if(!Number.isFinite(dist[target]))return null;
+
+const path=[];
+for(let at=target;at!==-1;at=prev[at])path.unshift(at);
+
+return {path,distance:dist[target]};
+}
+
+document.getElementById("find").addEventListener("click",()=>{
+const a=Number(start.value);
+const b=Number(end.value);
+
+if(a===b){
+alert("Please choose two different locations.");
+return;
+}
+
+const r=shortestPath(a,b);
+
+if(!r){
+alert("No route available.");
+return;
+}
+
+document.getElementById("empty").style.display="none";
+document.getElementById("result").style.display="block";
+document.getElementById("distance").textContent=r.distance+" m";
+document.getElementById("stops").textContent=r.path.length;
+
+const track=document.getElementById("track");
+track.innerHTML="";
+
+r.path.forEach((node,index)=>{
+const card=document.createElement("div");
+card.className="node"+(index===0?" start":"")+(index===r.path.length-1?" end":"");
+card.innerHTML="<span>"+icons[node]+"</span>"+places[node];
+track.append(card);
+
+if(index<r.path.length-1){
+const arrow=document.createElement("span");
+arrow.className="arrow";
+arrow.textContent="→";
+track.append(arrow);
+}
+});
+
+const list=document.getElementById("steps");
+list.innerHTML="";
+
+r.path.forEach((node,index)=>{
+const li=document.createElement("li");
+
+if(index===0){
+li.textContent="Start at "+places[node]+".";
+}else{
+const from=r.path[index-1];
+const key=Math.min(from,node)+"-"+Math.max(from,node);
+li.textContent=directions[key]||"Follow the connecting campus path from "+places[from]+" towards "+places[node]+".";
+}
+
+if(index===r.path.length-1){
+li.textContent+=" You have arrived at "+places[node]+".";
+}
+
+list.append(li);
+});
+});
+</script>
+</body>
+</html>
